@@ -16,10 +16,10 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Build backend image
-        run: docker build -t docker.io/my-organization/my-back:${{ github.sha }} ./back
+        run: docker build -t docker.io/my-organization/my-back:${{ github.sha }} ./back_employee
 
       - name: Build frontend image
-        run: docker build -t docker.io/my-organization/my-front:${{ github.sha }} ./front
+        run: docker build -t docker.io/my-organization/my-front:${{ github.sha }} ./front_employee
 
       - name: Scan backend image with Trivy
         uses: aquasecurity/trivy-action@0.28.0
