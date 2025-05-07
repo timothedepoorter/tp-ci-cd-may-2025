@@ -1,0 +1,67 @@
+services:
+  # Database
+  bdd:
+    container_name: bdd
+    image: mysql
+    volumes:
+      - db_data:/var/lib/mysql
+    restart: always
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: employee
+      MYSQL_PASSWORD: password
+    networks:
+      - mysql-phpmyadmin
+
+  # phpmyadmin
+  phpmyadmin:
+    depends_on:
+      - bdd
+    image: phpmyadmin
+    restart: always
+    ports:
+      - "8090:80"
+    environment:
+      PMA_HOST: bdd
+    networks:
+      - mysql-phpmyadmin
+
+  #backend
+  springboot-docker-container:
+    container_name: springboot
+    ports:
+      - 8080:8080
+    build:
+      context: ./
+      dockerfile: back_employee/Dockerfile
+    depends_on:
+      - bdd
+    networks:
+      - mysql-phpmyadmin
+
+  # front
+  react-nginx:
+    build:
+      context: ./front_employee
+      dockerfile: Dockerfile
+    container_name: react-nginx
+    ports:
+      - 80:80
+    depends_on:
+      - springboot-docker-container
+    networks:
+      - mysql-phpmyadmin
+
+networks:
+  mysql-phpmyadmin:
+    driver: bridge
+
+volumes:
+  db_data:
+
+
+# docker-compose up -d
+
+# docker-compose down
