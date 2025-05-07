@@ -1,70 +1,42 @@
-name: trivy
+name: build
 
 on:
-  workflow_dispatch:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
   pull_request:
-    branches: [ "main" ]
-  schedule:
-    - cron: '23 15 * * 1'
-
-permissions:
-  contents: read
 
 jobs:
   build:
-    permissions:
-      contents: read
-      security-events: write
-      actions: read
-    name: Build
+    name: Build and Scan Docker Images
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      - name: Install Docker Compose
-        run: |
-          sudo curl -L "https://github.com/docker/compose/releases/download/v2.24.5/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-          sudo chmod +x /usr/local/bin/docker-compose
-          docker-compose --version
+      - name: Build backend image
+        run: docker build -t docker.io/my-organization/my-back:${{ github.sha }} ./back
 
-      - name: Build with Docker Compose
-        run: |
-          docker-compose build
-          # Debug - afficher toutes les images disponibles
-          docker images
-          # Tagger les images avec le nom correct du projet
-          docker tag tp-ci-cd-may-2025_react-nginx:latest docker.io/my-organization/frontend:${{ github.sha }}
-          docker tag tp-ci-cd-may-2025_springboot-docker-container:latest docker.io/my-organization/backend:${{ github.sha }}
+      - name: Build frontend image
+        run: docker build -t docker.io/my-organization/my-front:${{ github.sha }} ./front
 
-      - name: Run Trivy vulnerability scanner (Frontend)
-        uses: aquasecurity/trivy-action@7b7aa264d83dc58691451798b4d117d53d21edfe
+      - name: Scan backend image with Trivy
+        uses: aquasecurity/trivy-action@0.28.0
         with:
-          image-ref: 'docker.io/my-organization/frontend:${{ github.sha }}'
-          format: 'template'
-          template: '@/contrib/sarif.tpl'
-          output: 'trivy-results-frontend.sarif'
+          image-ref: 'docker.io/my-organization/my-back:${{ github.sha }}'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
 
-      - name: Run Trivy vulnerability scanner (Backend)
-        uses: aquasecurity/trivy-action@7b7aa264d83dc58691451798b4d117d53d21edfe
+      - name: Scan frontend image with Trivy
+        uses: aquasecurity/trivy-action@0.28.0
         with:
-          image-ref: 'docker.io/my-organization/backend:${{ github.sha }}'
-          format: 'template'
-          template: '@/contrib/sarif.tpl'
-          output: 'trivy-results-backend.sarif'
+          image-ref: 'docker.io/my-organization/my-front:${{ github.sha }}'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
-
-      - name: Upload Trivy scan results to GitHub Security tab (Frontend)
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: 'trivy-results-frontend.sarif'
-          category: 'frontend-trivy'
-
-      - name: Upload Trivy scan results to GitHub Security tab (Backend)
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: 'trivy-results-backend.sarif'
-          category: 'backend-trivy'
