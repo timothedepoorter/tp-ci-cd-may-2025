@@ -33,11 +33,11 @@ jobs:
       - name: Build with Docker Compose
         run: |
           docker-compose build
-          # Afficher les images disponibles
+          # Debug - afficher toutes les images disponibles
           docker images
-          # Tagger les images
-          docker tag tp-ci-cd-may-2025-react-nginx:latest docker.io/my-organization/frontend:${{ github.sha }}
-          docker tag tp-ci-cd-may-2025-springboot-docker-container:latest docker.io/my-organization/backend:${{ github.sha }}
+          # Tagger les images avec le nom correct du projet
+          docker tag tp-ci-cd-may-2025_react-nginx:latest docker.io/my-organization/frontend:${{ github.sha }}
+          docker tag tp-ci-cd-may-2025_springboot-docker-container:latest docker.io/my-organization/backend:${{ github.sha }}
 
       - name: Run Trivy vulnerability scanner (Frontend)
         uses: aquasecurity/trivy-action@7b7aa264d83dc58691451798b4d117d53d21edfe
@@ -61,8 +61,10 @@ jobs:
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: 'trivy-results-frontend.sarif'
+          category: 'frontend-trivy'
 
       - name: Upload Trivy scan results to GitHub Security tab (Backend)
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: 'trivy-results-backend.sarif'
+          category: 'backend-trivy'
