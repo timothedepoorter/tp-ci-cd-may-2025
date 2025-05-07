@@ -24,9 +24,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Set up Docker Compose
+        uses: ndeloof/install-compose-action@v0.0.1
+
       - name: Build images with docker-compose
         run: |
-          docker-compose build
+          docker compose build
           # Récupérer l'ID de l'image pour le frontend
           FRONTEND_IMAGE_ID=$(docker-compose images -q react-nginx)
           # Tagger l'image pour Trivy
