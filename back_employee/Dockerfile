@@ -1,14 +1,14 @@
 # Etape de build avec Maven
-FROM maven as builder
+FROM maven AS builder
 
 WORKDIR /app
 
 # Copie du fichier pom.xml et téléchargement des dépendances
-COPY back_employee/pom.xml .
+COPY ./pom.xml .
 RUN mvn dependency:go-offline
 
 # Copie des fichiers sources et exécution de la construction
-COPY back_employee/src ./src
+COPY ./src ./src
 RUN mvn package -DskipTests
 
 
