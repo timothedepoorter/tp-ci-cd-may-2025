@@ -24,16 +24,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Docker Compose
-        uses: ndeloof/install-compose-action@v0.0.1
+      - name: Install Docker Compose
+        run: |
+          sudo curl -L "https://github.com/docker/compose/releases/download/v2.24.5/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+          docker-compose --version
 
       - name: Build with Docker Compose
         run: |
           docker-compose build
-          # Obtenir et tagger l'image frontend
+          # Afficher les images disponibles
+          docker images
+          # Tagger les images
           docker tag tp-ci-cd-may-2025-react-nginx:latest docker.io/my-organization/frontend:${{ github.sha }}
-          # Obtenir et tagger l'image backend
-          docker tag springboot:latest docker.io/my-organization/backend:${{ github.sha }}
+          docker tag tp-ci-cd-may-2025-springboot-docker-container:latest docker.io/my-organization/backend:${{ github.sha }}
 
       - name: Run Trivy vulnerability scanner (Frontend)
         uses: aquasecurity/trivy-action@7b7aa264d83dc58691451798b4d117d53d21edfe
