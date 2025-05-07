@@ -27,17 +27,13 @@ jobs:
       - name: Set up Docker Compose
         uses: ndeloof/install-compose-action@v0.0.1
 
-      - name: Build images with docker-compose
+      - name: Build with Docker Compose
         run: |
-          docker compose build
-          # Récupérer l'ID de l'image pour le frontend
-          FRONTEND_IMAGE_ID=$(docker-compose images -q react-nginx)
-          # Tagger l'image pour Trivy
-          docker tag $FRONTEND_IMAGE_ID docker.io/my-organization/frontend:${{ github.sha }}
-          # Récupérer l'ID de l'image pour le backend
-          BACKEND_IMAGE_ID=$(docker-compose images -q springboot-docker-container)
-          # Tagger l'image pour Trivy
-          docker tag $BACKEND_IMAGE_ID docker.io/my-organization/backend:${{ github.sha }}
+          docker-compose build
+          # Obtenir et tagger l'image frontend
+          docker tag tp-ci-cd-may-2025-react-nginx:latest docker.io/my-organization/frontend:${{ github.sha }}
+          # Obtenir et tagger l'image backend
+          docker tag springboot:latest docker.io/my-organization/backend:${{ github.sha }}
 
       - name: Run Trivy vulnerability scanner (Frontend)
         uses: aquasecurity/trivy-action@7b7aa264d83dc58691451798b4d117d53d21edfe
